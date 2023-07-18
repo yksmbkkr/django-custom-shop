@@ -1,0 +1,19 @@
+{% load menu_tags %}
+<div class="modal fade" id="shopMenuModal" tabindex="-1" aria-labelledby="shopMenuModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-body py-4">
+        {% get_current_category_menu as current_menu %}
+        {% if current_menu %}
+            <ul class="list-group list-group-flush">
+                {% for item in current_menu %}
+                <li class="list-group-item py-4">
+                    <a class="btn btn-outline-primary w-100" href="{{ item.get_absolute_url }}">{{ item.name }}</a>
+                </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>

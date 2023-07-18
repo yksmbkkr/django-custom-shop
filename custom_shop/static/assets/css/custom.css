@@ -1,0 +1,74 @@
+body {
+    padding-bottom: 70px;
+    padding-top: 50px
+}
+
+a.text-secondary:hover,a.text-secondary:focus {
+    --bs-link-color-rgb: var(--bs-secondary) !important;
+    color: var(--bs-secondary)!important
+}
+
+.floating-bottom-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%
+}
+
+.shadow-bottom-bar {
+    box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175) !important;
+}
+
+.cart-action-group {
+    width: 100%
+}
+
+.cart-action-group>.btn:first-child,.cart-action-group>.btn:last-child {
+    border-radius: 0
+}
+
+.food-description {
+    font-size: 13px !important;
+}
+
+@media(min-width: 768px) {
+    body {
+        padding-bottom:80px;
+        padding-top: 50px
+    }
+
+    .floating-bottom-bar {
+        bottom: 20px
+    }
+
+    .cart-action-group {
+        width: 30rem
+    }
+
+    .cart-action-group>.btn:first-child {
+        border-top-left-radius: var(--bs-border-radius-lg);
+        border-bottom-left-radius: var(--bs-border-radius-lg)
+    }
+
+    .cart-action-group>.btn:last-child {
+        border-top-right-radius: var(--bs-border-radius-lg);
+        border-bottom-right-radius: var(--bs-border-radius-lg)
+    }
+
+    .shadow-bottom-bar {
+        box-shadow: none !important;
+    }
+
+    .food-description {
+        font-size: 16px !important;
+    }
+}
+
+.price_color {
+    color: var(--bs-primary) !important;
+}
+
+.img-greyscale {
+    -webkit-filter: grayscale(100%); /* Safari 6.0 - 9.0 */
+    filter: grayscale(100%);
+}

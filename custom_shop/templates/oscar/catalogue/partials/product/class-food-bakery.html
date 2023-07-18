@@ -1,0 +1,100 @@
+{% load display_tags %}
+{% load i18n %}
+{% load image_tags %}
+{% load reviews_tags static %}
+{% load basket_tags %}
+{% load purchase_info_tags %}
+
+{% block product %}
+    <article class="d-flex d-lg-none mb-4">
+        <div class="flex-fill pe-2">
+            <h3 class="mb-1">
+                <a class="text-decoration-none text-primary-emphasis" href="{{ product.get_absolute_url }}" title="{{ product.get_title }}">
+                    {{ product.get_title|truncatewords:4 }}
+                </a>
+            </h3>
+            {% iffeature "reviews" %}
+                <p class="star-rating mb-1 {{ product.rating|as_stars }}">
+                    <i class="fas fa-star" style="font-size: 15px"></i>
+                    <i class="fas fa-star" style="font-size: 15px"></i>
+                    <i class="fas fa-star" style="font-size: 15px"></i>
+                    <i class="fas fa-star" style="font-size: 15px"></i>
+                    <i class="fas fa-star" style="font-size: 15px" ></i>
+                </p>
+            {% endiffeature %}
+            {% include "shop/partials/stock_record.html" %}
+{#                {% if not product.is_parent and not product.has_options %}#}
+{#                    {% include "oscar/catalogue/partials/add_to_basket_form_compact.html" %}#}
+{#                {% endif %}#}
+            <p>{{ product.short_description }}</p>
+        </div>
+        <div class="position-relative">
+            {% with image=product.primary_image %}
+            <div>
+                    {% oscar_thumbnail image.original "x100" upscale=False as thumb %}
+                    <a href="{{ product.get_absolute_url }}">
+                        <img width="150" src="{% if thumb.url %}{{ thumb.url }}{% else %}{% static 'assets/images/food-placeholder.jpg' %}{% endif %}" alt="{{ product.get_title }}" class="rounded-3 mx-auto my-0">
+                    </a>
+            </div>
+            <div class="text-center" {% if thumb.url %}style="position: absolute; top: 135px; width: 100%" {% endif %}>
+                {% if not product.is_parent and not product.has_options %}
+                    {% purchase_info_for_product request product as session %}
+                    {% if session.availability.is_available_to_buy %}
+                        {% basket_form request product 'single' as basket_form %}
+                        <form action="{% url 'basket:add' pk=product.pk %}" method="post">
+                            {% csrf_token %}
+                            {{ basket_form.as_p }}
+                            <button type="submit" class="btn btn-outline-primary shadow px-4" data-loading-text="{% trans 'Adding...' %}">ADD</button>
+                        </form>
+                    {% endif %}
+                {% else %}
+                    <button type="button" class="btn btn-outline-primary shadow px-4" onclick="window.location.href='{{ product.get_absolute_url }}'">ADD</button>
+                    <p class="text-muted small">customisable</p>
+                {% endif %}
+            </div>
+            {% endwith %}
+        </div>
+    </article>
+    <hr class="d-flex d-lg-none mt-3">
+    <article class="product_pod d-none d-lg-block">
+        {% block product_image %}
+            <div class="image_container w-100">
+                {% with image=product.primary_image %}
+                    {% oscar_thumbnail image.original "x155" upscale=False as thumb %}
+                    <a href="{{ product.get_absolute_url }}">
+                        <img src="{% if thumb.url %}{{ thumb.url }}{% else %}{% static 'assets/images/food-placeholder.jpg' %}{% endif %}" alt="{{ product.get_title }}" class="img-thumbnail w-auto mx-auto my-0">
+                    </a>
+                {% endwith %}
+            </div>
+        {% endblock %}
+
+        {% block product_review %}
+            {% iffeature "reviews" %}
+                <p class="star-rating {{ product.rating|as_stars }}">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                </p>
+            {% endiffeature %}
+        {% endblock %}
+
+        {% block product_title %}
+            <h3 class="mt-3">
+                <a href="{{ product.get_absolute_url }}" title="{{ product.get_title }}">
+                    {{ product.get_title|truncatewords:4 }}
+                </a>
+            </h3>
+        {% endblock %}
+
+        {% block product_price %}
+            <div class="product_price w-100">
+                {% include "oscar/catalogue/partials/stock_record.html" %}
+                {% if not product.is_parent and not product.has_options %}
+                    {% include "oscar/catalogue/partials/add_to_basket_form_compact.html" %}
+                {% endif %}
+            </div>
+        {% endblock %}
+    </article>
+{% endblock %}

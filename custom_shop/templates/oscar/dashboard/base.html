@@ -1,0 +1,17 @@
+{% extends "oscar/base.html" %}
+
+{% block extrahead %}
+    {{ block.super }}
+
+    <meta name="robots" content="NONE,NOARCHIVE">
+    <style>
+        .form-check-input {
+            margin-top: 0.75rem;
+        }
+    </style>
+{% endblock %}
+
+
+{% block tracking %}
+    {# By default there is no analytics tracking in the dashboard #}
+{% endblock %}

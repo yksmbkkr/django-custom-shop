@@ -1,0 +1,75 @@
+{% extends 'oscar/dashboard/layout.html' %}
+{% load category_tags shop_order_tags math_filters shop_filters %}
+{% load i18n %}
+{% load render_table from django_tables2 %}
+
+{% block body_class %}{{ block.super }} catalogue{% endblock %}
+
+{% block title %}
+    {% trans "Orders" %} | {{ block.super }}
+{% endblock %}
+
+{% block breadcrumbs %}
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="{% url 'dashboard:index' %}">{% trans "Dashboard" %}</a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">
+                {% trans "Orders Overview" %}
+            </li>
+        </ol>
+    </nav>
+{% endblock %}
+
+{% block dashboard_content %}
+    <div class="row">
+    {% for shop in shops %}
+        <div class="col-md-6 col-lg-4 col-xl-2 p-3">
+            <div class="card shadow">
+                <div class="card-body">
+                    <h4 class="card-title">{{ shop.shop__name }}</h4>
+                    <p class="text-muted">
+                        (Total Orders: {{ shop.total_count }})
+                    </p>
+                    <p>
+                        Operational day: {{ shop.shop__id | shop_today_duration }}
+                    </p>
+                    <div class="row">
+                        <div class="col-12">
+                            <button class="w-100 btn btn-outline-primary" onclick="goToShopOrders('{{ shop.shop__id }}', null)">Filter Orders</button>
+                        </div>
+{#                        <div class="col-12 mt-3">#}
+{#                            <button class="w-100 btn btn-outline-primary" onclick="goToShopOrders('{{ shop.shop__id }}', 'dept')">Department wise orders</button>#}
+{#                        </div>#}
+{#                        <div class="col-12 mt-3">#}
+{#                            <button class="w-100 btn btn-outline-primary" onclick="goToShopOrders('{{ shop.shop__id }}', 'item')">Item wise orders</button>#}
+{#                        </div>#}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+    </div>
+
+{#    {% if not child_categories %}#}
+{#        <p>{% trans "There are no categories/shops." %}</p>#}
+{#    {% endif %}#}
+    <script type="text/javascript">
+        const goToShopOrders = (shopId, filterBy) => {
+            const url = '{% url 'dashboard:order-filter' %}'
+            const base = window.location.protocol + '//' + window.location.host
+            let endpoint = new URL(url, base)
+            let queryParams = {
+                duration: 'today',
+                shopId: shopId
+            }
+            if (filterBy) {
+                queryParams['filterBy'] = filterBy
+            }
+            endpoint.searchParams.set('params', JSON.stringify(queryParams))
+            window.location.href = endpoint;
+
+        }
+    </script>
+{% endblock dashboard_content %}

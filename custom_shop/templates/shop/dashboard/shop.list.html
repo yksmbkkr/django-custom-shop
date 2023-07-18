@@ -1,0 +1,98 @@
+{% extends 'oscar/dashboard/layout.html' %}
+{% load category_tags shop_order_tags math_filters %}
+{% load i18n %}
+{% load render_table from django_tables2 %}
+
+{% block body_class %}{{ block.super }} catalogue{% endblock %}
+
+{% block title %}
+    {% trans "Categories" %} | {{ block.super }}
+{% endblock %}
+
+{% block breadcrumbs %}
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="{% url 'dashboard:index' %}">{% trans "Dashboard" %}</a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">
+                {% trans "Shops List" %}
+            </li>
+        </ol>
+    </nav>
+{% endblock %}
+
+{% block header %}
+    <div class="page-header">
+        <a href="{% url 'dashboard:catalogue-category-create' %}" class="btn btn-primary float-right"><i class="fas fa-plus-circle"></i> {% trans "Create new category/shop" %}</a>
+        <h1>{% trans "Shops" %}</h1>
+    </div>
+{% endblock header %}
+
+{% block dashboard_content %}
+{#    <div class="alert alert-info">#}
+{#        <div>{% trans "You are editing:" %}#}
+{#            <strong><a href="{% url 'dashboard:catalogue-category-list' %}">{% trans "Home" %}</a></strong>#}
+{#            {% if ancestors %}#}
+{#                &gt;#}
+{#                {% for ancestor in ancestors %}#}
+{#                    <strong><a href="{% url 'dashboard:catalogue-category-detail-list' pk=ancestor.pk %}">{{ ancestor.name }}</a></strong>{% if not forloop.last %} > {% endif %}#}
+{#                {% endfor %}#}
+{#            {% endif %}#}
+{#        </div>#}
+{#    </div>#}
+
+    <div class="section">
+        <div class="row">
+            <div class="col-12 px-2">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Shop</th>
+                            <th>Start Hour</th>
+                            <th>Cutoff Hour</th>
+                            <th>Status</th>
+                            <th>Order Limit</th>
+                            <th>Orders Placed Today</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for shop in shop_list %}
+                        {% today_order_count_for_shop shop as order_count %}
+                        <tr>
+                            <th>{{ shop.name }}</th>
+                            <td>{{ shop.start_hour }} o'clock</td>
+                            <td>{{ shop.cutoff_hour }} o'clock</td>
+                            <td>
+                                {% if order_count >= shop.order_limit %}
+                                    Disabled - Order Limit Reached
+                                {% else %}
+                                    {{ shop.status|yesno:'Accepting Orders, Not Accepting Orders' }}
+                                {% endif %}
+                            </td>
+                            <td>{{ shop.order_limit }}</td>
+                            <td>
+                                {% if order_count < shop.order_limit|multiply:0.60 %}
+                                    <span class="text-success font-weight-bold">{{ order_count }}</span>
+                                {% elif order_count < shop.order_limit|multiply:0.85 %}
+                                    <span class="text-warning font-weight-bold">{{ order_count }}</span>
+                                {% else %}
+                                    <span class="text-danger font-weight-bold">{{ order_count }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'dashboard:update-shop' shop.id %}" class="btn btn-secondary">Edit</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+{#    {% if not child_categories %}#}
+{#        <p>{% trans "There are no categories/shops." %}</p>#}
+{#    {% endif %}#}
+{% endblock dashboard_content %}

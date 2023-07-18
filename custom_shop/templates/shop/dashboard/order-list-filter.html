@@ -1,0 +1,278 @@
+{% extends 'oscar/dashboard/layout.html' %}
+{% load category_tags shop_order_tags math_filters shop_filters humanize %}
+{% load i18n %}
+{% load render_table from django_tables2 %}
+
+{% block body_class %}{{ block.super }} catalogue{% endblock %}
+
+{% block title %}
+    {% trans "Orders" %} | {{ block.super }}
+{% endblock %}
+
+{% block breadcrumbs %}
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="{% url 'dashboard:index' %}">{% trans "Dashboard" %}</a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="{% url 'dashboard:order-overview' %}">{% trans "Overview" %}</a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">
+                {% trans "Orders" %}
+            </li>
+        </ol>
+    </nav>
+{% endblock %}
+
+{% block dashboard_content %}
+    <style>
+        .form-check-input {
+                margin-top: 0.3rem !important;
+        }
+    </style>
+    <div class="row">
+        <div class="col-12 d-flex">
+            <div class="row">
+            <div class="col-3 col-xl-2">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">Filters</h4>
+                        <div class="col-12">
+                            <form id="filterForm">
+                                <div class="form-group">
+                                    <h5>Duration</h5>
+                                </div>
+                                <div class="form-group">
+                                    <div class="form-check mb-2">
+                                      <input class="form-check-input" type="radio" name="duration" id="durationRadio1" value="today" {% if filters.duration != 'week' and filters.duration != 'yesterday' %}checked{% endif %}>
+                                      <label class="form-check-label" for="durationRadio1">
+                                          Orders for today<br /><span class="text-muted small">({{ shop.id|shop_today_duration }})</span>
+                                      </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                      <input class="form-check-input" type="radio" name="duration" id="durationRadio2" value="yesterday" {% if filters.duration == 'yesterday' %}checked{% endif %}>
+                                      <label class="form-check-label" for="durationRadio2">
+                                          Orders for yesterday<br /><span class="text-muted small">({{ shop.id|shop_yesterday_duration }})</span>
+                                      </label>
+                                    </div>
+                                    <div class="form-check">
+                                      <input class="form-check-input" type="radio" name="duration" id="durationRadio3" value="week" {% if filters.duration == 'week' %}checked{% endif %}>
+                                      <label class="form-check-label" for="durationRadio3">
+                                        Orders for past week
+                                      </label>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <h5>Department</h5>
+                                </div>
+                                <div class="form-group">
+                                    <select class="select2-single" id="departmentSelect" name="filterDept" style="width: 100%">
+                                        <option value="">All Departments</option>
+                                        {% for dept in dept_list %}
+                                            <option value="{{ dept.id }}" {% if dept.id in filters.filterDept %}selected="selected"{% endif %}>{{ dept }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <h5>Items</h5>
+                                </div>
+                                <div class="form-group">
+                                    <select class="select2-multi" id="itemSelect" name="filterItem" multiple="multiple" style="width: 100%">
+
+                                        {% for item in items_list %}
+                                            <option value="{{ item.id }}" {% if item.id in filters.filterItem %}selected="selected"{% endif %}>{{ item }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="col-12 mt-3">
+                            <button type="button" class="btn btn-outline-primary w-100" onclick="updateFilter()">
+                                Update
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-9 col-xl-10">
+                <div class="row">
+                    <div class="col-12 mb-3">
+                        <h2 class="text-primary">
+                            {{ shop.name }} Orders
+                        </h2>
+                    </div>
+                    <div class="col-12 mb-3"></div>
+                    <div class="col-12 mb-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <table id="orderTable" class="table table-striped">
+                            <thead>
+                            <tr>
+                                <th>Order #</th>
+                                <th>Ordered By</th>
+                                <th>Is Student</th>
+                                <th>Department</th>
+                                <th>Total Amount</th>
+                                <th>Items</th>
+                                <th>Order Status</th>
+                                <th>Delivery Method</th>
+                                <th>Delivery Phone</th>
+                                <th>Deliver to Department</th>
+                                <th>Delivery Address</th>
+{#                                <th>Instructions</th>#}
+                                <th>When</th>
+                                <th>Time</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for shop_order in orders %}
+                                <tr>
+                                    <td><a href="{% url 'dashboard:order-detail' number=shop_order.order.number %}">{{ shop_order.order.number }}</a></td>
+                                    <td>{{ shop_order.order.user.first_name }} {{ shop_order.order.user.last_name }}</td>
+                                    <td>{{ shop_order.order.user.get_user_type_display }}</td>
+                                    <td>{{ shop_order.order.user.department|default:'-' }}</td>
+                                    <td>{{ shop_order.order.total_incl_tax }}</td>
+                                    <td>{% for item in shop_order.order.lines.all %}{{ item.product }} - Rs. {{ item.unit_price_incl_tax }} (x{{ item.quantity }}){% for attribute in item.attributes.all %}<br />&nbsp;&nbsp;&nbsp;{{ attribute.option }}: {{ attribute.value }}{% endfor %}<br />{% endfor %}</td>
+                                    <td>{{ shop_order.order.status }}</td>
+                                    <td>{{ shop_order.order.shipping_method }}</td>
+                                    <td>{{ shop_order.order.shipping_address.phone_number }}</td>
+                                    <td>{{ shop_order.order.shipping_address.line3 }}</td>
+                                    <td>{{ shop_order.order.shipping_address }}</td>
+{#                                    <td>#}
+{#                                        <ul>#}
+{#                                            {% for item in shop_order.order.lines.all %}#}
+{#                                                <li>#}
+{#                                                    <p>#}
+{#                                                        {{ item.product }} - Rs. {{ item.unit_price_incl_tax }} (x{{ item.quantity }})#}
+{#                                                        <ul>#}
+{#                                                            {% for attribute in item.attributes.all %}#}
+{#                                                                <li>{{ attribute.option }}: {{ attribute.value }}</li>#}
+{#                                                            {% endfor %}#}
+{#                                                        </ul>#}
+{#                                                    </p>#}
+{#                                                </li>#}
+{#                                            {% endfor %}#}
+{#                                        </ul>#}
+{#                                    </td>#}
+                                    <td>
+                                        {{ shop_order.created|naturaltime }}
+                                    </td>
+                                    <td> {{ shop_order.created|date:"U" }} </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+    </div>
+
+    {#    {% if not child_categories %}#}
+    {#        <p>{% trans "There are no categories/shops." %}</p>#}
+    {#    {% endif %}#}
+{% endblock dashboard_content %}
+
+{% block extrascripts %}
+    {{ block.super }}
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            {% autoescape off %}
+            const deptSelect = $('#departmentSelect');
+            deptSelect.select2();
+            deptSelect.val('{{ filters.filterDept.0 }}');
+            deptSelect.trigger('change');
+
+            const itemSelect = $('#itemSelect');
+            itemSelect.select2();
+            itemSelect.val({{ filters.filterItem }});
+            itemSelect.trigger('change');
+            {% endautoescape %}
+            let buttonCommon = {
+                exportOptions: {
+                    format: {
+                        body: function ( data, row, column, node ) {
+                            // Strip $ from salary column to make it numeric
+                            console.log(data)
+                            if(column == 5) {
+                                data = data.replaceAll('<br>','\n')
+                                data = data.replaceAll('&nbsp;','   ')
+                                return data
+                            }
+                            return data
+                        }
+                    }
+                }
+            };
+            $('#orderTable').DataTable({
+                {#scrollX: true,#}
+                pageLength: 200,
+                lengthMenu: [100, 200, 500, 1000],
+                {#columnDefs: [#}
+                {#    {#}
+                {#        target: 7,#}
+                {#        visible: false,#}
+                {#        searchable: false#}
+                {#    },#}
+                {#    {#}
+                {#        target: 9,#}
+                {#        visible: false,#}
+                {#        searchable: false#}
+                {#    }#}
+                {#],#}
+                order: [[ 12, 'desc' ]],
+                dom: 'Blfrtip',
+                buttons: [
+                    $.extend( true, {}, buttonCommon, {
+                        extend: 'copyHtml5'
+                    } ),
+                    $.extend( true, {}, buttonCommon, {
+                        extend: 'excelHtml5'
+                    } ),
+                    $.extend( true, {}, buttonCommon, {
+                        extend: 'pdfHtml5'
+                    } )
+                ]
+            });
+        });
+        const goToShopOrders = (shopId, filterBy) => {
+            const url = '{% url 'dashboard:order-filter' %}'
+            const base = window.location.protocol + '//' + window.location.host
+            let endpoint = new URL(url, base)
+            let queryParams = {
+                duration: 'today',
+                shopId: shopId
+            }
+            if (filterBy) {
+                queryParams['filterBy'] = filterBy
+            }
+            endpoint.searchParams.set('params', JSON.stringify(queryParams))
+            window.location.href = endpoint;
+
+        }
+
+        const updateFilter = () => {
+            const url = '{% url 'dashboard:order-filter' %}'
+            const base = window.location.protocol + '//' + window.location.host
+            let endpoint = new URL(url, base)
+            const filterData = new FormData(document.getElementById('filterForm'));
+
+             let queryParams = {
+                duration: filterData.get('duration'),
+                shopId: '{{shop.id}}',
+                filterDept: filterData.getAll('filterDept'),
+                filterItem: filterData.getAll('filterItem')
+            }
+
+
+
+            endpoint.searchParams.set('params', JSON.stringify(queryParams))
+            window.location.href = endpoint;
+        }
+    </script>
+{% endblock %}

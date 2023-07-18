@@ -1,0 +1,47 @@
+{% extends 'oscar/layout.html' %}
+{% load i18n %}
+{% load category_tags static shop_order_tags %}
+
+{% block header %}
+    <div class="page-header">
+        <h1>{% block headertext %}Hi {{ request.user.get_full_name | default:'there' }} !{% endblock %}</h1>
+    </div>
+{% endblock %}
+
+{% block content_wrapper %}
+    {% category_tree as categories_list %}
+    {% csrf_token %}
+    <div class="container mt-4">
+        <div class="row">
+            {% for category in categories_list %}
+                {% if category.level < 1 %}
+                    {% shop_accepting_orders category as is_shop_available %}
+                    <div class="col-12 col-md-6 col-lg-4 col-xl-3 p-3 p-md-3">
+                        <div class="card border-0 rounded-3">
+                            <img class="card-img {% if not is_shop_available %}img-greyscale{% endif %}" src="
+                                    {% if category.image %}{{ category.image.url }}{% else %}{% static 'assets/images/image-placeholder.png' %}{% endif %}"/>
+                            {% if is_shop_available %}
+                                <div class="card-img-overlay d-flex flex-column justify-content-end p-0">
+                                    <h3 class="card-title m-0 px-2 py-3" style="background: rgba(1,1,1,0.85)">
+                                        <a class="text-light fw-bold text-decoration-none"
+                                           href="{{ category.url }}">Order {{ category.name }}</a>
+                                    </h3>
+                                </div>
+                            {% else %}
+                                <div class="card-img-overlay d-flex flex-column justify-content-end p-0">
+                                    <h3 class="card-title m-0 px-2 py-3" style="background: rgba(1,1,1,0.85)">
+                                        <span class="text-light fw-bold text-decoration-none"
+                                           href="{{ category.url }}">Order {{ category.name }}</span>
+                                    </h3>
+                                </div>
+                            {% endif %}
+                        </div>
+                        {% if not is_shop_available %}
+                        <h6 class="text-primary mt-2">This shop is currently not accepting orders.</h6>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}

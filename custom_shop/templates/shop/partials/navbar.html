@@ -1,0 +1,125 @@
+{% load i18n static device_check_tags %}
+{% is_my_android_app as android_app_flag %}
+<nav class="navbar navbar-expand bg-light p-2 fixed-top shadow">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/">
+            <img class="nav-brand-custom" src="{% static 'assets/images/logo-no-background.png' %}" alt="PAU e-Store" />
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#navbarSupportedContent"
+                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="offcanvas offcanvas-end" id="navbarSupportedContent">
+            <div class="offcanvas-header">
+                <h5 class="offcanvas-title" id="offcanvasNavbarLabel">Offcanvas</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            </div>
+            <div class="offcanvas-body">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                    {% if user.is_authenticated %}
+                        {% if user.is_staff or perms.partner.dashboard_access or perms.coreapp.can_view_oms %}
+                            <li class="nav-item ms-1 d-none d-lg-block">
+                                <a href="{% url 'dashboard:index' %}" class="nav-link text-primary-emphasis">
+                                    <i class="fas fa-list-ul ms-2 text-primary fs-4"></i>
+                                    {% trans "Dashboard" %}
+                                </a>
+                            </li>
+                        {% endif %}
+{#                        <li class="nav-item">#}
+{#                            <a href="{{ homepage_url }}" class="nav-link mt-2 mt-lg-0">#}
+{#                                <i class="fas fa-shop ms-2 text-primary fs-4" title="Shops"></i>#}
+{#                                <span class="d-lg-inline-block d-none">Shops</span>#}
+{#                            </a>#}
+{#                        </li>#}
+                        <li class="nav-item ms-4 ms-lg-1 d-none d-lg-block">
+                            {% if num_unread_notifications > 0 %}
+                                {# If user has new notifications - we change account link to go to inbox #}
+                                <a href="{% url 'customer:notifications-inbox' %}" class="nav-link mt-2 mt-lg-0">
+                                    <i class="fas fa-circle-user ms-2 text-primary fs-4" title="Notifications"></i>
+                                    <span class="d-lg-inline-block d-none">Account</span>
+                                    <span class="badge badge-warning">{{ num_unread_notifications }}</span>
+                                </a>
+                            {% else %}
+                                <a href="{% url 'customer:summary' %}" class="nav-link mt-2 mt-lg-0">
+                                    <i class="fas fa-circle-user ms-2 text-primary fs-4" title="Account"></i>
+                                    <span class="d-lg-inline-block d-none">Account</span>
+                                </a>
+                            {% endif %}
+                        </li>
+                        <li class="nav-item ms-2 mt-2 mt-lg-0 d-block d-lg-none">
+                            <a href="#" class="nav-link text-primary-emphasis" data-bs-toggle="modal"
+                               data-bs-target="#navSearchModal">
+                                <i class="fas fa-search ms-2 text-primary fs-4"></i>
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown ms-2 ms-lg-1 mt-2 mt-lg-0 d-block d-lg-none">
+                            <a class="nav-link dropdown-toggle " href="#" role="button" data-bs-toggle="dropdown"
+                               aria-expanded="false">
+                                <i class="fas fa-circle-user ms-2 text-primary fs-4" title="Profile"></i>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-left" style="left: -100px">
+                                <li class="py-2"><a class="dropdown-item"
+                                                    href="{% url 'customer:summary' %}">Account</a></li>
+                                <li class="py-2"><a class="dropdown-item"
+                                                    href="{% url 'customer:notifications-inbox' %}">Notifications
+                                    {% if num_unread_notifications > 0 %}
+                                        <span class="badge badge-warning">{{ num_unread_notifications }}</span>{% endif %}
+                                </a></li>
+                            <li class="py-2"><a class="dropdown-item"
+                                                    href="{% url 'customer:address-list' %}">Address Book</a></li>
+                            <li class="py-2"><a class="dropdown-item"
+                                                    href="{% url 'customer:order-list' %}">Order History</a></li>
+                                <li class="py-2">
+                                    {% if android_app_flag %}
+                                    <button class="dropdown-item"  type="button" id="app-logout-button" onclick="postAuthSignal('LOGOUT_INVOKED')">Logout</button>
+                                    {% else %}
+                                    <button class="dropdown-item" id="logout-button">Logout</button>
+                                    {% endif %}
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="nav-item ms-2 d-none d-lg-block">
+                            {% if android_app_flag %}
+                            <button type="button" id="logout_link" class="nav-link" onclick="postAuthSignal('LOGOUT_INVOKED')">
+                                <i class="fas fa-sign-out-alt ms-2 text-primary fs-4"></i>
+                                {% trans "Logout" %}
+                            </button>
+                            {% else %}
+                            <button id="logout-button-desktop" class="nav-link">
+                                <i class="fas fa-sign-out-alt ms-2 text-primary fs-4"></i>
+                                {% trans "Logout" %}
+                            </button>
+                            {% endif %}
+                        </li>
+
+                        <li class="nav-item ms-3 d-none d-lg-block">
+                            {% include "oscar/partials/search.html" %}
+                        </li>
+                    {% else %}
+{#                        <li class="nav-item">#}
+{#                            <a href="{{ homepage_url }}" class="nav-link mt-2 mt-lg-0">#}
+{#                                <i class="fas fa-shop ms-2 text-primary fs-4" title="Shops"></i>#}
+{#                                <span class="d-lg-inline-block d-none">Shops</span>#}
+{#                            </a>#}
+{#                        </li>#}
+                        <li class="nav-item ms-4 mt-2 mt-lg-0">
+                            {% if android_app_flag %}
+                                <button id="login_link" class="btn btn-outline-primary border-0 bg-transparent" type="button" onclick="postAuthSignal('LOGIN_INVOKED')">
+                                    <i class="fas fa-sign-in-alt ms-2"></i>
+                                    Login/Register
+                                </button>
+                            {% else %}
+                                <button id="login_link" data-bs-toggle="modal" data-bs-target="#loginModal" class="btn btn-outline-primary border-0 bg-transparent">
+                                    <i class="fas fa-sign-in-alt ms-2"></i>
+                                    Login/Register
+                                </button>
+                            {% endif %}
+                        </li>
+                    {% endif %}
+
+                </ul>
+            </div>
+
+        </div>
+    </div>
+</nav>

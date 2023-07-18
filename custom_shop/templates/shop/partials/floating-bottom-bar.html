@@ -1,0 +1,33 @@
+{% load currency_filters %}
+{% load i18n %}
+
+<div class="floating-bottom-bar d-flex justify-content-center shadow-bottom-bar">
+    <div class="btn-group btn-group-lg cart-action-group" role="group" aria-label="Action Bar">
+        <button type="button" class="btn btn-outline-primary border-0 w-100 d-lg-none" onclick="window.location.href='{% url 'basket:summary' %}';">
+            <span>Cart</span>
+            <span> </span>
+            <span>
+                ({% if request.basket.is_tax_known %}
+                    {{ request.basket.total_incl_tax|currency:request.basket.currency }}
+                {% else %}
+                    {{ request.basket.total_excl_tax|currency:request.basket.currency }}
+                {% endif %})
+            </span>
+        </button>
+        <button type="button" class="btn btn-outline-primary border-0 w-100 d-none d-lg-block rounded-start-3 text-center" data-bs-toggle="dropdown" data-bs-target="#miniBasketContainer">
+            <span>Cart</span>
+            <span> </span>
+            <span>
+                ({% if request.basket.is_tax_known %}
+                    {{ request.basket.total_incl_tax|currency:request.basket.currency }}
+                {% else %}
+                    {{ request.basket.total_excl_tax|currency:request.basket.currency }}
+                {% endif %})
+            </span>
+        </button>
+        <div class="{% block mini_basket_dropdown_classes %}dropdown-menu dropdown-menu-right{% endblock %}">
+            {% include "oscar/basket/partials/basket_quick.html" %}
+        </div>
+        <button type="button" class="btn btn-outline-primary border-0 w-100" data-bs-toggle="modal" data-bs-target="#shopMenuModal">Menu</button>
+    </div>
+</div>
